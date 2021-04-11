@@ -20,8 +20,8 @@ parser.add_argument('--level', default = "state",
                     help='state, nation or county')
 parser.add_argument('--state', default = "default",
                     help='state')
-parser.add_argument('--nation', default = "default",
-                    help='nation')
+#parser.add_argument('--nation', default = "default",
+#                    help='nation')
 parser.add_argument('--dataset', default = "NYtimes",
                     help='nytimes')
 parser.add_argument('--popin', type=float, default = 0,
@@ -31,73 +31,30 @@ PRED_START_DATE = args.VAL_END_DATE
 
 
 print(args)
-START_nation = {"Brazil": "2020-03-30", "Canada": "2020-03-28", "Mexico": "2020-03-30", \
- "India": "2020-03-28", "Turkey": "2020-03-22", "Russia": "2020-04-01", "Saudi Arabia": "2020-03-28", "US": "2020-03-22", \
- "United Arab Emirates": "2020-04-10", "Qatar": "2020-04-06", "France": "2020-03-20", "Spain": "2020-03-15", \
- "Indonesia":"2020-03-28", "Peru": "2020-04-06", "Chile": "2020-05-08", "Pakistan": "2020-04-01", "Germany":"2020-03-15", "Italy": "2020-03-10", \
- "South Africa": "2020-04-10", "Sweden": "2020-03-25", "United Kingdom": "2020-03-25", "Colombia": "2020-04-03", "Argentina": "2020-04-03", "Bolivia": "2020-04-26", \
- "Ecuador": "2020-03-28", "Iran": "2020-03-15"}
+START_nation = {"US": "2020-03-22"}
 
 
-FR_nation = {"Brazil": [0.2,0.02], "Canada": [0.1,0.015], "Mexico": [0.35, 0.015], 
- "India": [0.20, 0.02], "Turkey": [1, 0.04], "Russia": [0.1, 0.022], "Saudi Arabia": [0.2, 0.035], "US": [0.75, 0.02], \
- "United Arab Emirates": [0.07, 0.04], "Qatar": [0.02, 0.05], "France": [0.25, 0.015], "Spain": [0.4, 0.02], \
- "Indonesia": [0.5, 0.02], "Peru": [0.1, 0.013], "Chile": [0.08, 0.025], "Pakistan": [0.16, 0.025], "Germany":[0.4, 0.1], "Italy":[0.35, 0.02], \
- "South Africa": [0.1, 0.026], "Sweden": [0.5, 0.028], "United Kingdom": [0.5, 0.028], "Colombia": [0.17, 0.01], "Argentina": [0.1, 0.012], "Bolivia": [0.2, 0.015], \
- "Ecuador": [0.5, 0.015], "Iran": [0.5, 0.02]}
+FR_nation = {"US": [0.75, 0.02]}
 
-decay_state = {"Pennsylvania": [0.7, 0.024], "New York": [0.7, 0.042], "Illinois": [0.7, 0.035], "California": [0.5,0.016], "Massachusetts": [0.7,0.026], "New Jersey": [0.7,0.03], \
-"Michigan": [0.8,0.035], "Virginia": [0.7,0.034], "Maryland": [0.7,0.024], "Washington": [0.7,0.036], "North Carolina": [0.7,0.018], "Wisconsin": [0.7,0.034], "Texas": [0.3,0.016], \
-"New Mexico": [0.7,0.02], "Louisiana": [0.4,0.02], "Arkansas": [0.7,0.02], "Delaware": [0.7,0.03], "Georgia": [0.7,0.015], "Arizona": [0.7,0.02], "Connecticut": [0.7,0.026], "Ohio": [0.7,0.024], \
-"Kentucky": [0.7,0.023], "Kansas": [0.7,0.02], "New Hampshire": [0.7,0.014], "Alabama": [0.7,0.024], "Indiana": [0.7,0.03], "South Carolina": [0.7,0.02], "Colorado": [0.7,0.02], "Florida": [0.4,0.016], \
-"West Virginia": [0.7,0.022], "Oklahoma": [0.7,0.03], "Mississippi": [0.7,0.026], "Missouri": [0.7,0.02], "Utah": [0.7,0.018], "Alaska": [0.7,0.04], "Hawaii": [0.7,0.04], "Wyoming": [0.7,0.04], "Maine": [0.7,0.025], \
-"District of Columbia": [0.7,0.024], "Tennessee": [0.7,0.027], "Idaho": [0.7,0.02], "Oregon": [0.7,0.036], "Rhode Island": [0.7,0.024], "Nevada": [0.5,0.022], "Iowa": [0.7,0.02], "Minnesota": [0.7,0.025], \
-"Nebraska": [0.7,0.02], "Montana": [0.5,0.02]}
+decay_state = {"California": [0.5,0.016]}
 
-mid_dates_state = {"Alabama": "2020-06-03", "Arizona": "2020-05-28", "Arkansas": "2020-05-11", "California": "2020-05-30", "Georgia": "2020-06-05",
- "Nevada": "2020-06-01", "Oklahoma": "2020-05-31", "Oregon": "2020-05-29", "Texas": "2020-06-15", "Ohio": "2020-06-09",
-     "West Virginia": "2020-06-08", "Florida": "2020-06-01", "South Carolina": "2020-05-25", "Utah": "2020-05-28", "Iowa": "2020-06-20", "Idaho": "2020-06-15",
-     "Montana": "2020-06-15", "Minnesota": "2020-06-20", "Illinois": "2020-06-30", "New Jersey": "2020-06-30", "North Carolina": "2020-06-20" , "Maryland":  "2020-06-25",
-     "Kentucky": "2020-06-30", "Pennsylvania": "2020-07-01", "Colorado": "2020-06-20", "New York": "2020-06-30", "Alaska": "2020-06-30", "Washington": "2020-06-01"
-}
-mid_dates_state_resurge = {"Colorado": "2020-09-10", "California": "2020-09-30", "Florida": "2020-09-20", "Illinois": "2020-09-10", "New York": "2020-09-10", "Texas": "2020-09-15"
-}
+mid_dates_state = {"California": "2020-05-30"}
+
+mid_dates_state_resurge = {"California": "2020-09-30"}
 
 
 mid_dates_county = {"San Joaquin": "2020-05-26", "Contra Costa": "2020-06-02", "Alameda": "2020-06-03", "Kern": "2020-05-20", \
  "Tulare": "2020-05-30", "Sacramento": "2020-06-02", "Fresno": "2020-06-07", "San Bernardino": "2020-05-25", \
  "Los Angeles": "2020-06-05", "Santa Clara": "2020-05-29", "Orange": "2020-06-12", "Riverside": "2020-05-26", "San Diego": "2020-06-02" \
- 
 }
-mid_dates_nation = {"US": "2020-06-15", "Mexico": "2020-07-05", "India": "2020-07-30", "South Africa": "2020-06-01", "Brazil": "2020-07-20", \
- "Iran": "2020-08-30", "Bolivia": "2020-05-25", "Indonesia": "2020-08-01", "Italy": "2020-07-15", "Canada": "2020-08-15", "Russia": "2020-08-20", \
- "United Kindom": "2020-07-08", "Spain": "2020-07-30", "France": "2020-06-28", "Argentina": "2020-08-01", "United Kindom": "2020-07-20", "Canada": "2020-08-30"
-}
+mid_dates_nation = {"US": "2020-06-15"}
 
 north_cal = ["Santa Clara", "San Mateo", "Alameda", "Contra Costa", "Sacramento", "San Joaquin", "Fresno"]
 
 
-def get_county_list(cc_limit=200, pop_limit=50000):
-    non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands"]
-    data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
-    with open("data/county_pop.json", 'r') as f:
-        County_Pop = json.load(f)
-    county_list = []
-    for region in County_Pop.keys():
-        county, state = region.split("_")
-        if County_Pop[region][0]>=pop_limit and not state in non_county_list:        
-            train_data = data.get("2020-03-22", args.END_DATE, state, county)
-            confirm, death = train_data[0], train_data[1]
-            start_date = get_start_date(train_data)
-            if len(death) >0 and np.max(death)>5 and np.max(confirm)>cc_limit and start_date < "2020-05-01":
-                county_list += [region]
-
-    return county_list
-
-
-
 if args.level == "state":
-    data = NYTimes(level='states') if args.dataset == "NYtimes" else JHU_US(level='states')
+    data = NYTimes(level='states')
+    #if args.dataset == "NYtimes" else JHU_US(level='states')
     nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands"]
     # region_list = [state for state in data.state_list if not state in nonstate_list]
     mid_dates = mid_dates_state
@@ -110,25 +67,14 @@ if args.level == "state":
         val_dir = "val_results_state/test"
 
 elif args.level == "county":
-    state = "California"
-    data = NYTimes(level='counties') if args.dataset == "NYtimes" else JHU_US(level='counties')
+    state = args.state
+    data = NYTimes(level='counties')
+    #if args.dataset == "NYtimes" else JHU_US(level='counties')
     # region_list = get_county_list(cc_limit=1000, pop_limit=5000)
     # print("# feasible counties:", len(region_list))
     mid_dates = mid_dates_county
     val_dir = "val_results_county/" 
     pred_dir = "pred_results_county/"
-
-elif args.level == "nation":
-    data = JHU_global()
-    # region_list = START_nation.keys()
-    mid_dates = mid_dates_nation
-    with open("data/world_pop.json", 'r') as f:
-        Nation_Pop = json.load(f)
-    val_dir = "val_results_world/"
-    pred_dir = "pred_results_world/"
-    if not args.nation == "default":
-        region_list = [args.nation]
-        val_dir = "val_results_world/test"
 
 json_file_name = val_dir + args.dataset + "_" + "val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
 if not os.path.exists(json_file_name):
@@ -215,32 +161,6 @@ for region in region_list:
             a, decay = 0.7, 0.32
         pop_in = 1/400
 
-        
-    elif args.level == "nation":
-        nation = str(region)
-
-        if nation in mid_dates_nation.keys():
-            second_start_date = mid_dates[nation]
-            reopen_flag = True
-        elif nation == "Turkey":
-            second_start_date = "2020-06-07"
-            reopen_flag = False
-        else:
-            second_start_date = "2020-06-12"
-            reopen_flag = False
-        start_date = START_nation[nation]
-
-        train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, args.END_DATE, nation)]
-        full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, PRED_START_DATE, nation)]
-
-        if nation=="US":
-            train_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, "2020-09-15", nation), data.get("2020-09-15", args.END_DATE, nation)]
-            full_data = [data.get(start_date, second_start_date, nation), data.get(second_start_date, "2020-09-15", nation), data.get("2020-09-15", PRED_START_DATE, nation)]
-
-
-        a, decay = FR_nation[nation] 
-        pop_in = 1/400 if nation == "US" else 1/400
-
 
     # determine the parameters including pop_in, N and E_0
     mean_increase = 0
@@ -263,14 +183,6 @@ for region in region_list:
             pop_in = 1/500
             if state == "California":
                 pop_in = 0.01
-        if args.level == "nation" and (region == "Germany" or region == "Italy" or region=="Canada"):
-            pop_in = 1/5000
-        if not args.level == "nation" and (state == "New York"):
-            pop_in = 1/5000
-        if args.level == "nation" and (region == "Iran"):
-            pop_in = 1/1000  
-        if args.level == "nation" and (region == "US"):
-            pop_in = 1/400
         if args.popin >0:
             pop_in = args.popin
     print("region: ", region, " start date: ", start_date, " mid date: ", second_start_date,
@@ -279,18 +191,9 @@ for region in region_list:
     # print (N, E_0)
     new_sus = 0 if reopen_flag else 0
     if args.level == "state" or args.level == "county":
-        bias = 0.025 if reopen_flag or (state=="Louisiana" or state=="Washington" or state == "North Carolina" or state == "Mississippi") else 0.005
-        if state == "Arizona" or state == "Alabama" or state == "Florida" or state=="Indiana" or state=="Wisconsin" or state == "Hawaii" or state == "California" or state=="Texas" or state=="Illinois":
+        bias = 0.025 if reopen_flag else 0.005
+        if state == "California":
             bias = 0.01
-        if state == "Arkansas" or state == "Iowa" or state == "Minnesota" or state == "Louisiana" \
-         or state == "Nevada" or state == "Kansas" or state=="Kentucky" or state == "Tennessee" or state == "West Virginia":
-            bias = 0.05
-    if args.level == "nation":
-        bias = 0.02 if reopen_flag else 0.01
-        if nation == "Germany":
-            bias = 0.02
-        if nation == "US":
-            bias = 0.02
 
     data_confirm, data_fatality = train_data[0][0], train_data[0][1]
     model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, bias=bias)
@@ -302,13 +205,6 @@ for region in region_list:
     pred_true = rolling_prediction(model, init, params_all, full_data, new_sus, pred_range=prediction_range, pop_in=pop_in, daily_smooth=True)
 
     confirm = full_data[0][0][0:-1].tolist() + full_data[1][0][0:-1].tolist() + pred_true[0].tolist()
-
-    plt.figure()
-    plt.plot(np.diff(np.array(confirm)))
-    plt.savefig("figure_"+args.level+"/daily_increase_"+region+".pdf")
-    # print(np.diff(np.array(confirm)))
-    plt.close()
-
 
     print ("region: ", region, " training loss: ",  \
         loss_all, loss_true," maximum death cases: ", int(pred_true[1][-1]), " maximum confirmed cases: ", int(pred_true[0][-1])) 

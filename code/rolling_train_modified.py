@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 from model import Learner_SuEIR, Learner_SuEIR_H
-from data import NYTimes, Hospital_US, JHU_global
+from data import NYTimes
 
 
 
@@ -246,43 +246,3 @@ def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
 
     model.reset()
     return loss_all[0], loss_all[-1]
-
-
-
-
-if __name__ == '__main__':
-
-
-    N = 60000000
-    E = N/50
-
-    # N = 6585370
-    # E = N/70
-
-    data = JHU_global()
-    # data = NYTimes(level='states')
-    a, decay = 0.75, 0.033
-    # state = "California"
-
-    train_data = [data.get('2020-03-22', '2020-05-28', "US"), data.get('2020-05-28', '2020-06-17', "US")]
-    data_confirm, data_fatality = train_data[0][0], train_data[0][1]
-
-    init = [N-E-data_confirm[0]-data_fatality[0],
-            E, data_confirm[0], data_fatality[0]]
-
-
-    model = Learner_SuEIR(N=N, E_0=E, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay)
-
-    params_all, loss_all = rolling_train(model, init, train_data, new_sus=N/2)
-    
-    pred_confirm, pred_fatality, _ = rolling_prediction(model, init, params_all, train_data, new_sus=N/2, pred_range=7)
-    print(np.diff(pred_confirm))
-    print (pred_confirm)
-
-    confirm = train_data[0][0][0:-1].tolist() + train_data[1][0][0:-1].tolist() + pred_confirm.tolist()
-    plt.figure()
-    plt.plot(np.diff(np.array(confirm)))
-    plt.savefig("figure/daily_increase.pdf")
-    # print(np.diff(np.array(confirm)))
-    plt.close()
-    print(pred_fatality + train_data[-1][1][-1] - pred_fatality[0])
