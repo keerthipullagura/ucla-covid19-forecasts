@@ -1,12 +1,6 @@
-import numpy as np
-import pandas as pd
-import json
 import argparse
-import us
 import os
 
-from model import *
-from data import *
 from rolling_train_modified import *
 from util import *
 from datetime import timedelta, datetime
@@ -95,7 +89,8 @@ for region in region_list:
     
     if args.level == "state":
         state = str(region)
-        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
+        start_date = START_nation['US']
+        #start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
         mid_dates = mid_dates_state
         if state in mid_dates.keys():
             second_start_date = mid_dates[state]
@@ -130,7 +125,8 @@ for region in region_list:
         county, state = region.split(", ")
         region = county + ", " + state
         key = county + "_" + state
-        start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
+        start_date = START_nation['US']
+        #start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
 
         if state=="California" and county in mid_dates.keys():
             second_start_date = mid_dates[county]

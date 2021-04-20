@@ -163,12 +163,15 @@ def get_county_list():
     return county_list
 
 def get_start_date(data, limit=10):
+    #ind = [x[0] for x in data[0] if x[0] > limit]
     ind = np.where(data[0]>limit)[0]
     if len(ind)==0:
         START_DATE = "2020-06-01"
     else:
-        ind = float(ind[0])
-        START_DATE = (pd.to_datetime("2020-03-22") + timedelta(days=ind)).strftime("%Y-%m-%d")
+        #Doing this bcoz earlier the indices of cases which are beyond the limit are captured, now since the if takes care of limit check, the index is 0
+        startIndex = 0
+        #ind = float(ind[0])
+        START_DATE = (pd.to_datetime("2020-03-22") + timedelta(days=startIndex)).strftime("%Y-%m-%d")
     return START_DATE
 
 def num2str(x):

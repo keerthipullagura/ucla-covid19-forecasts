@@ -62,12 +62,8 @@ def validation(model, init, params_all, train_data, val_data,  new_sus, pop_in):
 
     return  0.5*loss(pred_confirm, val_data_confirm, smoothing=0.1) + loss(pred_fatality, val_data_fatality, smoothing=0.1)
 
-def get_county_list_for_state(cc_limit=200, pop_limit=50000, stateName="California"):
+def get_county_list_for_state(cc_limit=200, pop_limit=50000, stateName="California", data=None, County_Pop= None):
     non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands", "Diamond Princess", "Grand Princess"]
-    data = NYTimes(level='counties')
-    #if args.dataset == "NYtimes" else JHU_US(level='counties')
-    with open("data/county_pop.json", 'r') as f:
-        County_Pop = json.load(f)
     county_list = []
     for region in County_Pop.keys():
         county, state = region.split("_")
@@ -77,7 +73,6 @@ def get_county_list_for_state(cc_limit=200, pop_limit=50000, stateName="Californ
             start_date = get_start_date(train_data)
             if len(death) >0 and np.max(death)>=0 and np.max(confirm)>cc_limit and start_date < "2020-05-10" and not county=="Lassen":
                 county_list += [region]
-
     return county_list
 
 
@@ -87,9 +82,7 @@ if __name__ == '__main__':
     # initial the dataloader, get region list 
     # get the directory of output validation files
     if args.level == "state":
-        # data = NYTimes(level='states')
         data = NYTimes(level='states')
-        '''if args.dataset == "NYtimes" else JHU_US(level='states')'''
         nonstate_list = ["American Samoa", "Diamond Princess", "Grand Princess", "Virgin Islands", "Northern Mariana Islands"]
         region_list = [state for state in data.state_list if not state in nonstate_list]
 
@@ -97,45 +90,23 @@ if __name__ == '__main__':
         write_dir = "val_results_state/" + args.dataset + "_" 
         if not args.state == "default":
             region_list = [args.state]  
-            # region_list = ["New York", "California", "Illinois", "North Carolina", "Florida", "Texas", "Georgia", "Arizona", "South Carolina", "Alabama"]
-            # region_list = ["New York", "California"]
-            write_dir = "val_results_state/test" + args.dataset + "_"       
+            write_dir = "val_results_state/test" + args.dataset + "_"
         
     elif args.level == "county":
         state = args.state
-        # data = NYTimes(level='counties')
         data = NYTimes(level='counties')
-        '''if args.dataset == "NYtimes" else JHU_US(level='counties')'''
-        # region_list = mid_dates_county.keys()
-        # region_list = ["Cochise_Arizona"]
         mid_dates = mid_dates_county
         with open("data/county_pop.json", 'r') as f:
-            #can change to pyspark df.
-            County_Pop = json.load(f)       
+            County_Pop = json.load(f)
 
         if not args.state == "default" and not args.county == "default":
-            # can change to pyspark df.
-            region_list = [args.county + "_" + args.state] 
-            # region_list = ["New York_New York", "Los Angeles_California", "Dallas_Texas"] 
+            region_list = [args.county + "_" + args.state]
             write_dir = "val_results_county/test" + args.dataset + "_"
         else:
-            # can change to pyspark df.
-            region_list = get_county_list_for_state(cc_limit=2000, pop_limit=10, stateName=state)
+            region_list = get_county_list_for_state(cc_limit=2000, pop_limit=10, stateName=state, data=data, County_Pop=County_Pop)
             print("# feasible counties:", len(region_list))
-            write_dir = "val_results_county/" + args.dataset + "_" 
+            write_dir = "val_results_county/" + args.dataset + "_"
 
-    '''elif args.level == "nation":
-        data = JHU_global()
-        region_list = START_nation.keys()
-        mid_dates = mid_dates_nation
-        write_dir = "val_results_world/" + args.dataset + "_" 
-        if not args.nation == "default":
-            region_list = [args.nation] 
-            write_dir = "val_results_world/test" + args.dataset + "_" 
-        with open("data/world_pop.json", 'r') as f:
-            Nation_Pop = json.load(f)'''
-        
-    
     params_allregion = {}
    
 
@@ -153,7 +124,8 @@ if __name__ == '__main__':
             print(state)
             # change to pyspark df.
             Pop=df_Population[df_Population['STATE']==state]["Population"].to_numpy()[0]
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
+            start_date = START_nation['US']
+            #start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state),100)
             if state in mid_dates.keys():
                 second_start_date = mid_dates[state]
                 train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
@@ -186,7 +158,8 @@ if __name__ == '__main__':
             key = county + "_" + state
 
             Pop=County_Pop[key][0]
-            start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
+            start_date = START_nation['US']
+            #start_date = get_start_date(data.get("2020-03-22", args.END_DATE, state, county))
             if state=="California" and county in mid_dates.keys():
                 second_start_date = mid_dates[county]
                 reopen_flag = True

@@ -34,24 +34,11 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
         pred_ave_confirm_perday = np.mean(np.maximum(0, np.diff(pred_confirm)[-7:]))
         pred_ave_fatality_perday = np.mean(np.maximum(0, np.diff(pred_fatality)[-7:]))
 
-        # pick_inds = np.arange(0, len(data_fatality), 7)
-        # pick_inds = pick_inds + len(data_fatality)-1 - pick_inds[-1]
+        #reg_loss = loss(np.array(params[2]), np.array(prev_params[2]), smoothing=0)
 
-        # pred_confirm_wk, pred_fatality_wk, data_confirm_wk, data_fatality_wk  \
-        # = pred_confirm[pick_inds], pred_fatality[pick_inds], data_confirm[pick_inds], data_fatality[pick_inds]
-
-        reg_loss = loss(np.array(params[2]), np.array(prev_params[2]), smoothing=0)
-        # print(np.diff(data_confirm_wk),np.diff(pred_confirm_wk))
-        # return loss((pred_confirm_wk), (data_confirm_wk)) \
-        #  + loss((pred_fatality_wk), (data_fatality_wk)) \
-        #  + 0.1*loss(np.diff(pred_confirm_wk), np.diff(data_confirm_wk)) \
-        #   + 0.1*loss(np.diff(pred_fatality_wk), np.diff(data_fatality_wk)) 
-            # + 0.5*loss(pred_ave_confirm_perday, target_ave_confirm_perday) + 0.5 * \
-            # loss(pred_ave_fatality_perday, target_ave_fatality_perday) + reg * reg_loss
-
-        return loss(pred_confirm, data_confirm) + 1*loss(pred_fatality, data_fatality) 
+        return loss(pred_confirm, data_confirm) + 1*loss(pred_fatality, data_fatality)
         + 1*loss(pred_ave_confirm_perday, target_ave_confirm_perday) + 3 * \
-            loss(pred_ave_fatality_perday, target_ave_fatality_perday) 
+            loss(pred_ave_fatality_perday, target_ave_fatality_perday)
 
     optimal = minimize(
         loss_train,
