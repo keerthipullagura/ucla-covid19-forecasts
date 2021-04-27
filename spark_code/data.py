@@ -71,7 +71,7 @@ class NYTimes(Data):
             tab = state_table[state_table['county'] == county]
         start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
         end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        st = state_table.withColumn("mask", (state_table.date >= start) & (state_table.date <= end))
+        st = tab.withColumn("mask", (tab.date >= start) & (tab.date <= end))
         st = st.filter(st.mask == True)
 
         #cases = spark.sql("select cases from st")
