@@ -36,11 +36,22 @@ START_nation = {"US": "2020-03-22"}
 
 FR_nation = {"US": [0.75, 0.02]}
 
-decay_state = {"California": [0.5,0.016]}
+decay_state = {"Pennsylvania": [0.7, 0.024], "New York": [0.7, 0.042], "Illinois": [0.7, 0.035], "California": [0.5,0.016], "Massachusetts": [0.7,0.026], "New Jersey": [0.7,0.03], \
+"Michigan": [0.8,0.035], "Virginia": [0.7,0.034], "Maryland": [0.7,0.024], "Washington": [0.7,0.036], "North Carolina": [0.7,0.018], "Wisconsin": [0.7,0.034], "Texas": [0.3,0.016], \
+"New Mexico": [0.7,0.02], "Louisiana": [0.4,0.02], "Arkansas": [0.7,0.02], "Delaware": [0.7,0.03], "Georgia": [0.7,0.015], "Arizona": [0.7,0.02], "Connecticut": [0.7,0.026], "Ohio": [0.7,0.024], \
+"Kentucky": [0.7,0.023], "Kansas": [0.7,0.02], "New Hampshire": [0.7,0.014], "Alabama": [0.7,0.024], "Indiana": [0.7,0.03], "South Carolina": [0.7,0.02], "Colorado": [0.7,0.02], "Florida": [0.4,0.016], \
+"West Virginia": [0.7,0.022], "Oklahoma": [0.7,0.03], "Mississippi": [0.7,0.026], "Missouri": [0.7,0.02], "Utah": [0.7,0.018], "Alaska": [0.7,0.04], "Hawaii": [0.7,0.04], "Wyoming": [0.7,0.04], "Maine": [0.7,0.025], \
+"District of Columbia": [0.7,0.024], "Tennessee": [0.7,0.027], "Idaho": [0.7,0.02], "Oregon": [0.7,0.036], "Rhode Island": [0.7,0.024], "Nevada": [0.5,0.022], "Iowa": [0.7,0.02], "Minnesota": [0.7,0.025], \
+"Nebraska": [0.7,0.02], "Montana": [0.5,0.02]}
 
-mid_dates_state = {"California": "2020-05-30"}
-mid_dates_state_resurge = {"California": "2020-09-30"}
-
+mid_dates_state = {"Alabama": "2020-06-03", "Arizona": "2020-05-28", "Arkansas": "2020-05-11", "California": "2020-05-30", "Georgia": "2020-06-05",
+ "Nevada": "2020-06-01", "Oklahoma": "2020-05-31", "Oregon": "2020-05-29", "Texas": "2020-06-15", "Ohio": "2020-06-09",
+     "West Virginia": "2020-06-08", "Florida": "2020-06-01", "South Carolina": "2020-05-25", "Utah": "2020-05-28", "Iowa": "2020-06-20", "Idaho": "2020-06-15",
+     "Montana": "2020-06-15", "Minnesota": "2020-06-20", "Illinois": "2020-06-30", "New Jersey": "2020-06-30", "North Carolina": "2020-06-20" , "Maryland":  "2020-06-25",
+     "Kentucky": "2020-06-30", "Pennsylvania": "2020-07-01", "Colorado": "2020-06-20", "New York": "2020-06-30", "Alaska": "2020-06-30", "Washington": "2020-06-01"
+}
+mid_dates_state_resurge = {"Colorado": "2020-09-10", "California": "2020-09-30", "Florida": "2020-09-20", "Illinois": "2020-09-10", "New York": "2020-09-10", "Texas": "2020-09-15"
+}
 
 mid_dates_county = {"San Joaquin": "2020-05-26", "Contra Costa": "2020-06-02", "Alameda": "2020-06-03", "Kern": "2020-05-20", \
  "Tulare": "2020-05-30", "Sacramento": "2020-06-02", "Fresno": "2020-06-07", "San Bernardino": "2020-05-25", \
@@ -51,8 +62,7 @@ mid_dates_nation = {"US": "2020-06-15"}
 
 north_cal = ["Santa Clara", "San Mateo", "Alameda", "Contra Costa", "Sacramento", "San Joaquin", "Fresno"]
 
-# severe_state = ["Florida"]  
-    
+
 
 def validation(model, init, params_all, train_data, val_data,  new_sus, pop_in):
     val_data_confirm, val_data_fatality = val_data[0], val_data[1]
@@ -62,17 +72,19 @@ def validation(model, init, params_all, train_data, val_data,  new_sus, pop_in):
 
     return  0.5*loss(pred_confirm, val_data_confirm, smoothing=0.1) + loss(pred_fatality, val_data_fatality, smoothing=0.1)
 
-def get_county_list_for_state(cc_limit=200, pop_limit=50000, stateName="California", data=None, County_Pop= None):
+def get_county_list_for_state(cc_limit=200, pop_limit=50000, data=None, County_Pop=None):
     non_county_list = ["Puerto Rico", "American Samoa", "Guam", "Northern Mariana Islands", "Virgin Islands", "Diamond Princess", "Grand Princess"]
+
     county_list = []
     for region in County_Pop.keys():
         county, state = region.split("_")
-        if County_Pop[region][0]>=pop_limit and not state in non_county_list and state == stateName:
+        if County_Pop[region][0]>=pop_limit and not state in non_county_list:
             train_data = data.get("2020-03-22", args.END_DATE, state, county)
             confirm, death = train_data[0], train_data[1]
             start_date = get_start_date(train_data)
             if len(death) >0 and np.max(death)>=0 and np.max(confirm)>cc_limit and start_date < "2020-05-10" and not county=="Lassen":
                 county_list += [region]
+
     return county_list
 
 
@@ -103,7 +115,7 @@ if __name__ == '__main__':
             region_list = [args.county + "_" + args.state]
             write_dir = "val_results_county/test" + args.dataset + "_"
         else:
-            region_list = get_county_list_for_state(cc_limit=2000, pop_limit=10, stateName=state, data=data, County_Pop=County_Pop)
+            region_list = get_county_list_for_state(cc_limit=2000, pop_limit=10, data=data, County_Pop=County_Pop)
             print("# feasible counties:", len(region_list))
             write_dir = "val_results_county/" + args.dataset + "_"
 
@@ -232,9 +244,14 @@ if __name__ == '__main__':
                 # In order to simulate the reopen, we assume at the second stage, there are N new suspectible individuals
                 new_sus = 0 if reopen_flag else 0
                 if args.level == "state" or args.level == "county":
-                    bias = 0.025 if reopen_flag else 0.005
+                    bias = 0.025 if reopen_flag or (state=="Louisiana" or state=="Washington" or state == "North Carolina" or state == "Mississippi") else 0.005
+                    if state == "Arizona" or state == "Alabama" or state == "Florida" or state=="Indiana" or state=="Wisconsin" or state == "Hawaii" or state == "California" or state=="Texas" or state=="Illinois":
+                        bias = 0.025 if reopen_flag else 0.005
                     if state == "California":
                         bias = 0.01
+                    if state == "Arkansas" or state == "Iowa" or state == "Minnesota" or state == "Louisiana" \
+                     or state == "Nevada" or state == "Kansas" or state=="Kentucky" or state == "Tennessee" or state == "West Virginia":
+                        bias = 0.05
                 data_confirm, data_fatality = train_data[0][0], train_data[0][1]
                 # print (bias)
                 model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, bias=bias)
