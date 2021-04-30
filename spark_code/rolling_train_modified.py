@@ -1,8 +1,5 @@
 import numpy as np
 from scipy.optimize import minimize
-from model import Learner_SuEIR, Learner_SuEIR_H
-from data import NYTimes
-
 
 
 def loss(pred, target, smoothing=10):
