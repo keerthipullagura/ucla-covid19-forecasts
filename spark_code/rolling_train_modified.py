@@ -3,15 +3,18 @@ from scipy.optimize import minimize
 
 
 def loss(pred, target, smoothing=10):
-    # print (pred)
+    # loss mean calculated
     return np.mean((np.log(pred+smoothing) - np.log(target+smoothing))**2)
 
+#method to train the model
 def train(model, init, prev_params, train_data, reg=0, lag=0):
-
+    #confirmed and fatalities.
     data_confirm, data_fatality = train_data[0], train_data[1]
+    #length 3 if mid-surge date is there calculating totalfatalities.
     if len(train_data)==3:
         data_fatality = train_data[1] + train_data[2]
     size = len(data_confirm)
+    #fatality and cases per day and their avg.
     fatality_perday = np.diff(data_fatality)
     target_ave_fatality_perday = np.median(
         fatality_perday[np.maximum(0, len(fatality_perday)-7):])
@@ -19,6 +22,7 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
     target_ave_confirm_perday = np.median(
         confirm_perday[np.maximum(0, len(confirm_perday)-7):])
 
+    # function called by scipy.odeint.optimize minimizing scalar function params
     def loss_train(params):
 
         _, _, _, pred_remove, pred_confirm, pred_fatality = model(size, params, init, lag)
@@ -31,7 +35,6 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
         pred_ave_confirm_perday = np.mean(np.maximum(0, np.diff(pred_confirm)[-7:]))
         pred_ave_fatality_perday = np.mean(np.maximum(0, np.diff(pred_fatality)[-7:]))
 
-        #reg_loss = loss(np.array(params[2]), np.array(prev_params[2]), smoothing=0)
 
         return loss(pred_confirm, data_confirm) + 1*loss(pred_fatality, data_fatality)
         + 1*loss(pred_ave_confirm_perday, target_ave_confirm_perday) + 3 * \
@@ -46,7 +49,7 @@ def train(model, init, prev_params, train_data, reg=0, lag=0):
 
     return optimal.x, optimal.fun
 
-
+#wrapper for training during validation
 def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
 
     lag = 0
@@ -60,8 +63,11 @@ def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
     # print (mean_increase, pop_in)
     for _train_data in train_data:
         ind += 1
+        #cases,fatalities
         data_confirm, data_fatality = _train_data[0], _train_data[1]
+        #train to get params and loss.
         params, train_loss = train(model, init, prev_params, _train_data, reg=reg, lag=lag)
+        # model differentials calculated using solver_ivp.
         pred_sus, pred_exp, pred_act, pred_remove, _, _ = model(len(data_confirm), params, init, lag=lag)
         # print(params)
         lag += len(data_confirm)-10
@@ -113,6 +119,7 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
             true_remove = np.minimum(data_confirm[-1], pred_remove[-1])
 
         lag += len(data_confirm)-10
+        #initialization params.
         init = [pred_sus[-1], pred_exp[-1], data_confirm[-1]-true_remove, true_remove]
         init[0] = init[0] + new_sus
         model.N += new_sus

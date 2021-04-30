@@ -7,6 +7,7 @@ from data import *
 from model import *
 from datetime import timedelta, datetime
 
+#read args
 parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
 parser.add_argument('--END_DATE', default = "default",
                     help='end date for training models')
@@ -79,10 +80,10 @@ elif args.level == "county":
     val_dir = "val_results_county/" 
     pred_dir = "pred_results_county/"
 
-json_file_name = val_dir + args.dataset + "_" + "val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
-if not os.path.exists(json_file_name):
-    json_file_name = val_dir + "JHU" + "_" + "val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
-
+sname = ''
+if args.level == "state":
+    sname = args.state
+json_file_name = val_dir + args.dataset + "_" + "val_params_best_"+sname +"_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
 
 
 
@@ -93,7 +94,7 @@ prediction_range = 100
 frame = []
 region_list = list(NE0_region.keys())
 region_list = [region for region in region_list if not region == "Independence, Arkansas"]
-# region_list = ["France"]
+
 for region in region_list:
     
     if args.level == "state":
@@ -311,7 +312,10 @@ for region in region_list:
     pred_data=pred_data.reset_index().rename(columns={"index": "Date"})
     frame.append(pred_data[pred_data['Date']>=datetime.strptime(PRED_START_DATE,"%Y-%m-%d")])
 
+sname = ''
+if args.level == "state":
+    sname = args.state
 
 result = pd.concat(frame)
-save_name = pred_dir + "pred_" + args.level + "_END_DATE_" + args.END_DATE + "_PRED_START_DATE_" + PRED_START_DATE + ".csv"
+save_name = pred_dir + "pred_" + args.level +"_" + sname + "_END_DATE_" + args.END_DATE + "_PRED_START_DATE_" + PRED_START_DATE + ".csv"
 result.to_csv(save_name, index=False)
