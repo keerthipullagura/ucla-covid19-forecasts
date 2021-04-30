@@ -32,6 +32,10 @@ df = df.select('*', unix_timestamp(df.date.cast('date')).alias('time'))
 # GET LIST OF ALL STATES
 states = df.rdd.map(lambda x : x.location).distinct().collect()
 
+# SAVE LIST OF STATES
+statesfilepath = "states.csv"
+newfile = np.savetxt(statesfilepath, states,"%s",header="states")
+
 MODEL_TYPE = "LinearRegression"
 
 for state in states: #["United States"]:
