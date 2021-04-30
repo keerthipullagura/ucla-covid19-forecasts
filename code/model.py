@@ -21,9 +21,9 @@ class xxx(Model):
         pass
 '''
 
-
+#team made changes to sueir model to add in real vaccination numbers, and predictions
 class Learner_SuEIR(Model):
-    def __init__(self, N, E_0, I_0, R_0, a, decay, bias=0.005):
+    def __init__(self, N, E_0, I_0, R_0, a, decay,vac_data,vac_date_diff, bias=0.005):
         self.N = N
         self.E_0 = E_0
         self.I_0 = I_0
@@ -35,19 +35,33 @@ class Learner_SuEIR(Model):
         self.pop_in = 0
         self.pop = N*5
         self.bias=1000000
+        self.vac_data = vac_data
+        self.vac_date_diff = vac_date_diff
 
         self.initial_N = N
         self.initial_pop_in = self.pop_in
         self.initial_bias=1000000
+        self.prev_t =vac_date_diff
+        self.last_segment_of_data =False
 
     def __call__(self, size, params, init, lag=0):
 
         beta, gamma, sigma, mu = params
 
         def calc_grad(t, y):
-            S, E, I, _ = y
+            S, E, I, Removed = y
+            if self.last_segment_of_data:
+                if t >= self.prev_t:
+                    diff_in_days = t - self.prev_t
+                    self.prev_t = t
+                    vaccinations = self.vac_data[round(t)-self.vac_date_diff]*diff_in_days
+                else:
+                    self.prev_t = self.vac_date_diff
+                    vaccinations = 0
+            else:
+                vaccinations = 0
             new_pop_in = self.pop_in*(self.pop-self.N)*(np.exp(-0.03*np.maximum(0, t-self.bias))+0.05)
-            return [new_pop_in-beta*S*(E+I)/self.N, beta*S*(E+I)/self.N-sigma*E, mu*E-gamma*I, gamma*I]
+            return [new_pop_in-beta*S*(E+I)/self.N-0.5*vaccinations*(S/(S+Removed)), beta*S*(E+I)/self.N-sigma*E, mu*E-gamma*I, gamma*I+0.5*vaccinations*(S/(S+Removed))]
 
         solution = solve_ivp(
             calc_grad, [0, size], init, t_eval=np.arange(0, size, 1))
