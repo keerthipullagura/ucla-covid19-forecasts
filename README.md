@@ -16,12 +16,12 @@ The vaccination predictions based LinearRegression for every state are generated
 
 Step 1: Go to directory spark_code and Run ```validation.py``` to generate validation file for selecting hyperparameters, e.g.,
 ```python
-python validation.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14  --dataset NYtimes --level state --state California
+python validation.py --END_DATE 2021-03-20 --VAL_END_DATE 2021-04-01  --dataset NYtimes --level state --state California
 ```
 Step 2: The results are generated under folder /spark_code/val_results_state
 Step 3: Go to directory spark_code and to Generate prediction results by running ```generate_predictions.py```, e.g.,
 ```python
-python generate_predictions.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14 --dataset NYtimes --level state --state California
+python generate_predictions.py --END_DATE 2021-03-20 --VAL_END_DATE 2021-04-01 --dataset NYtimes --level state --state California
 ```
 Step 4: The results are generated under folder /spark_code/pred_results_state
 
@@ -29,7 +29,7 @@ Before runing ```generate_predictions.py```, one should make sure the correspond
 
 
 ### Arguments:
-*```END_DATE```: end date for training data
+*```END_DATE```: end date for training data.
 
 *```VAL_END_DATE```: end date for validation data
 
