@@ -16,12 +16,12 @@ The vaccination predictions based LinearRegression for every state are generated
 
 Step 1: Go to directory spark_code and Run ```validation.py``` to generate validation file for selecting hyperparameters, e.g.,
 ```python
-python validation.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14  --dataset NYtimes --level state
+python validation.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14  --dataset NYtimes --level state --state California
 ```
 Step 2: The results are generated under folder /spark_code/val_results_state
 Step 3: Go to directory spark_code and to Generate prediction results by running ```generate_predictions.py```, e.g.,
 ```python
-python generate_predictions.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14 --dataset NYtimes --level state
+python generate_predictions.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14 --dataset NYtimes --level state --state California
 ```
 Step 4: The results are generated under folder /spark_code/pred_results_state
 
@@ -35,7 +35,7 @@ Before runing ```generate_predictions.py```, one should make sure the correspond
 
 *```level```: can be state default: state
 
-*```state```: validation/prediction for one specific state (```level``` should be set as state), default: all states in the US 
+*```state```: validation/prediction for one specific state (```level``` should be set as state), default: all states in the US. Sample is Alabama or California etc.
 
 *```dataset```: select which data source to use. We have used NYtimes, default: NYtimes data
 
@@ -45,6 +45,11 @@ We consider two-stage training (sequentially training over two periods of data, 
 
 ## Reference
 SuEIR referenced from https://github.com/uclaml/ucla-covid19-forecasts 
+
 UCLA forecasts at county, state, and nation levels in their website [covid19.uclaml.org](https://covid19.uclaml.org/).
+
+A Jupyter pyspark Docker container is available in https://hub.docker.com/r/jupyter/pyspark-notebook
+
+
 
 
