@@ -1,47 +1,50 @@
 
-# SuEIR model for forecasting the COVID-19 related confirmed cases, deaths, and hospitaliztions.
-
-## What is the SuEIR model?
-
-The SuEIR (see the figure below) model is an epidemic model for forecasting the active cases and deaths of COVID-19 by considering the unreported cases. The critical feature of SuEIR is the new compartment called "Unreported". Specifically,  we  treat  the  "Exposed"  group  in SEIR as the individuals that have already been infected  but  not  been tested,  who  are  also  capable  of infecting  others. Some of the people in the "Exposed" group will be tested and transferred to the "Infectious" group (which  are  reported  to  the  public), while  the  rest  will  recover/die  and  transit  to  the   "Unreported"  group that  are not reported to the public due to testing capacity, asymptomatic infection,  quick recovering, etc.
-
-<p align="center">
-    <img src="images/sueir.png" width="600"\>
-</p>
-<p align="center">
-Illustration of the SuEIR model.
-</p>
-
-
-## SuEIR model with hospitalization
-In addition to forecasting the numbers of confirmed cases and deaths, the SuEIR++ model incoporates "Hospitalized" and "ICU" compartments into the SuEIR model to enable the forecasting of the hospitalization resources (e.g., hospitalization and ICU beds). The model is illustrated in the figure below.
-
-<p align="center">
-    <img src="images/sueir_hospital.png" width="600"\>
-</p>
-<p align="center">
-Illustration of the SuEIR++ model.
-</p>
-
-## Projection results
-We include all history projections (confirmed cases, deaths, and hospitalizations) in the folder ```projection_result/```, which are updated on a weekly basis. We also visualize our forecasts at county, state, and nation levels in our website [covid19.uclaml.org](https://covid19.uclaml.org/).
-
-## Reference
-For more technical details, please refer to our [manuscript](https://www.medrxiv.org/content/10.1101/2020.05.24.20111989v1.full.pdf).
-```
-@article{zou2020epidemic,
-  title={Epidemic Model Guided Machine Learning for COVID-19 Forecasts in the United States},
-  author={Zou, Difan and Wang, Lingxiao and Xu, Pan and Chen, Jinghui and Zhang, Weitong and Gu, Quanquan},
-  journal={medRxiv},
-  year={2020},
-  publisher={Cold Spring Harbor Laboratory Press}
-}
-```
+# SuEIRV model for forecasting the COVID-19 related confirmed cases, deaths, and vaccinations.
 
 ## Vaccination
-to include the latest vaccination data in this model, run the following script prior to validation.py and generate_predictions.py
+to include the latest vaccination data in this model, run the following script first
 
 ```
 cd vaccination
 python vaccination.py
 ```
+The vaccination predictions based LinearRegression for every state are generated under /vaccination/predictions folder. Plots for every state which depict the vaccination rate over time is generated under /vaccination/plots
+
+## SuEIRV model for forecasting confirmed cases, deaths, and vaccinations state level.
+
+### How to get forecast results of confirmed cases, deaths at different levels after vaccination rates have been incorporated?
+
+Step 1: Go to directory spark_code and Run ```validation.py``` to generate validation file for selecting hyperparameters, e.g.,
+```python
+python validation.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14  --dataset NYtimes --level state
+```
+Step 2: The results are generated under folder /spark_code/val_results_state
+Step 3: Go to directory spark_code and to Generate prediction results by running ```generate_predictions.py```, e.g.,
+```python
+python generate_predictions.py --END_DATE 2020-07-07 --VAL_END_DATE 2020-07-14 --dataset NYtimes --level state
+```
+Step 4: The results are generated under folder /spark_code/pred_results_state
+
+Before runing ```generate_predictions.py```, one should make sure the corresponding validation file, i.e., with the same ```END_DATE```, ```VAL_END_DATE```, ```dataset```, and ```level```, has already be generated.
+
+
+### Arguments:
+*```END_DATE```: end date for training data
+
+*```VAL_END_DATE```: end date for validation data
+
+*```level```: can be state default: state
+
+*```state```: validation/prediction for one specific state (```level``` should be set as state), default: all states in the US 
+
+*```dataset```: select which data source to use. We have used NYtimes, default: NYtimes data
+
+### Notice:
+We consider two-stage training (sequentially training over two periods of data, determined by the ```mid_date``` variable determined in the code) for validation and generating predictions. Additionlly, the end date of training data ```END_DATE``` should guarantee that the length of the second period of data should be greater than 21, i.e., the length between ```mid_date``` and ```END_DATE``` should be greater than 21. For example, currently the ```mid_date``` for CA is 2020-06-07, then the ```END_DATE``` should be set at least after 2020-06-28.
+
+
+## Reference
+SuEIR referenced from https://github.com/uclaml/ucla-covid19-forecasts 
+UCLA forecasts at county, state, and nation levels in their website [covid19.uclaml.org](https://covid19.uclaml.org/).
+
+
