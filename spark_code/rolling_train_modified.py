@@ -63,6 +63,15 @@ def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
     # print (mean_increase, pop_in)
     for _train_data in train_data:
         ind += 1
+
+
+        #team added code to ensure adding vaccinations to latter dates
+        if ind == len(train_data):
+            model.last_segment_of_data =True
+        else:
+            model.last_segment_of_data=False
+
+
         #cases,fatalities
         data_confirm, data_fatality = _train_data[0], _train_data[1]
         #train to get params and loss.
@@ -91,17 +100,17 @@ def rolling_train(model, init, train_data, new_sus, pop_in=1/500):
         prev_params = params
         params_all += [params]
         loss_all += [train_loss]
-        
 
-    
-    
+
+
+
     init[0] = init[0] - new_sus
     model.reset()
     pred_sus, pred_exp, pred_act, pred_remove, pred_confirm, pred_fatality = model(7, params, init, lag=lag)
-    
+
     # print (pred_remove)
-    
-    return params_all, loss_all 
+
+    return params_all, loss_all
 
 def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range, pop_in=1/500, daily_smooth=False):
     lag = 0
@@ -112,7 +121,7 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
         ind += 1
         data_confirm, data_fatality = _train_data[0], _train_data[1]
         pred_sus, pred_exp, pred_act, pred_remove, _, _ = model(len(data_confirm), params, init, lag=lag)
-        
+
         if len(_train_data)==3:
             true_remove = np.minimum(data_confirm[-1], np.maximum(_train_data[1][-1] + _train_data[2][-1], pred_remove[-1]))
         else:
@@ -129,8 +138,8 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
         else:
             # model.pop_in = pop_in
             model.bias = 50
-        
-        
+
+
     model.bias = 60-len(data_confirm)
     if len(train_data)==3:
         model.bias = 50-len(data_confirm)
@@ -180,7 +189,7 @@ def rolling_prediction(model, init, params_all, train_data, new_sus, pred_range,
     temp_F_perday = np.diff(pred_fatality.copy())
     slope_temp_F_perday = np.diff(temp_F_perday)
     smoothing_slope = 0 if np.max(fatality_perday[-7:])>4*np.median(fatality_perday[-7:]) or np.median(fatality_perday[-7:])<0 else 1
-    
+
     # print (smoothing)
 
     modified_slope_gap_fatality = (slope_fatality_perday - slope_temp_F_perday[0])*smoothing_slope
@@ -222,7 +231,7 @@ def rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in):
             true_remove = np.minimum(data_confirm[-1], pred_remove[-1])
 
 
-            
+
         lag += len(data_confirm)-10
         init = [pred_sus[-1], pred_exp[-1], data_confirm[-1]-true_remove, true_remove]
         init[0] = init[0] + new_sus
