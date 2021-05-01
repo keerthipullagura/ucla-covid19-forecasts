@@ -12,7 +12,7 @@ The vaccination predictions based LinearRegression for every state are generated
 
 ## SuEIRV model for forecasting confirmed cases, deaths, and vaccinations state level.
 
-### How to get forecast results of confirmed cases, deaths at different levels?
+### How to get forecast results of confirmed cases, deaths at different levels after vaccination rates have been incorporated?
 
 Step 1: Go to directory spark_code and Run ```validation.py``` to generate validation file for selecting hyperparameters, e.g.,
 ```python
