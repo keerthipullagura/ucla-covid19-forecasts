@@ -6,6 +6,7 @@ from util import *
 from data import *
 from model import *
 from datetime import timedelta, datetime
+import time
 
 #read args
 parser = argparse.ArgumentParser(description='validation of prediction performance for all states')
@@ -30,9 +31,13 @@ print(args)
 
 
 #team adding vaccination data, will need to update for output of predictions
-vaccines = pd.read_csv("california_vaccinations.csv")
+csv_path = "../vaccination/predictions/"+args.state+"_LinearRegression_predictions.csv"
+vaccines = pd.read_csv(csv_path)
+vaccines['date'] = [time.strftime('%Y-%m-%d', time.localtime(x)) for x in vaccines['epoch']]
+#vaccines = pd.read_csv("california_vaccinations.csv")
+
 first_vaccine_date = list(vaccines.date)[0]
-vaccines = list(vaccines.daily_vaccinations)
+vaccines = list(vaccines.vaccination_rate)
 
 
 
