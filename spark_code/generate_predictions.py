@@ -25,9 +25,18 @@ parser.add_argument('--popin', type=float, default = 0,
                     help='popin')
 args = parser.parse_args()
 PRED_START_DATE = args.VAL_END_DATE
-
-
 print(args)
+
+
+
+#team adding vaccination data, will need to update for output of predictions
+vaccines = pd.read_csv("california_vaccinations.csv")
+first_vaccine_date = list(vaccines.date)[0]
+vaccines = list(vaccines.daily_vaccinations)
+
+
+
+
 START_nation = {"US": "2020-03-22"}
 
 
@@ -77,7 +86,7 @@ elif args.level == "county":
     state = args.state
     data = NYTimes(level='counties')
     mid_dates = mid_dates_county
-    val_dir = "val_results_county/" 
+    val_dir = "val_results_county/"
     pred_dir = "pred_results_county/"
 
 sname = ''
@@ -96,7 +105,7 @@ region_list = list(NE0_region.keys())
 region_list = [region for region in region_list if not region == "Independence, Arkansas"]
 
 for region in region_list:
-    
+
     if args.level == "state":
         state = str(region)
         start_date = START_nation['US']
@@ -105,7 +114,7 @@ for region in region_list:
             second_start_date = mid_dates[state]
             reopen_flag = True
         else:
-            second_start_date = "2020-08-30" 
+            second_start_date = "2020-08-30"
             reopen_flag = False
 
         train_data = [data.get(start_date, second_start_date, state), data.get(second_start_date, args.END_DATE, state)]
@@ -119,17 +128,40 @@ for region in region_list:
              data.get(resurge_start_date, PRED_START_DATE, state)]
 
 
+
+        #team added finding time between last section of dates starting and vaccines starting
+        try:
+            print("start date",start_date)
+            last_start_day =start_date
+        except:
+            print("no start date")
+        try:
+            print("second_start_date",second_start_date)
+            last_start_day = second_start_date
+        except:
+            print(" no second start date")
+        try:
+            print("resurge_start_date",resurge_start_date)
+            last_start_day = resurge_start_date
+        except:
+            print("no resurge date")
+        from datetime import datetime
+
+        date_difference = (datetime.strptime(first_vaccine_date,"%Y-%m-%d")- datetime.strptime(last_start_day,"%Y-%m-%d")).days
+        print(date_difference)
+
+
         if state in decay_state.keys():
             a, decay = decay_state[state][0], decay_state[state][1]
         else:
             a, decay = 0.7, 0.3
 
         # json_file_name = "val_results_state/" + args.dataset + "_val_params_best_END_DATE_" + args.END_DATE + "_VAL_END_DATE_" + args.VAL_END_DATE
-        # with open(json_file_name, 'r') as f:           
+        # with open(json_file_name, 'r') as f:
         #     NE0_region = json.load(f)
         pop_in = 1/400
         # will rewrite it using json
-        
+
     elif args.level == "county":
         county, state = region.split(", ")
         region = county + ", " + state
@@ -191,7 +223,7 @@ for region in region_list:
         if args.popin >0:
             pop_in = args.popin
     print("region: ", region, " start date: ", start_date, " mid date: ", second_start_date,
-        " end date: ", args.END_DATE, " Validation end date: ", args.VAL_END_DATE, "mean increase: ", mean_increase, pop_in )   
+        " end date: ", args.END_DATE, " Validation end date: ", args.VAL_END_DATE, "mean increase: ", mean_increase, pop_in )
     N, E_0 = NE0_region[region][0], NE0_region[region][1]
     # print (N, E_0)
     new_sus = 0 if reopen_flag else 0
@@ -206,18 +238,20 @@ for region in region_list:
             bias = 0.05
 
     data_confirm, data_fatality = train_data[0][0], train_data[0][1]
-    model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, bias=bias)
+    #team changed call to Sueir model to reflect new inputs
+    model = Learner_SuEIR(N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, vac_data =vaccines,vac_date_diff =date_difference , bias=bias)
+    #model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, bias=bias)
     init = [N-E_0-data_confirm[0]-data_fatality[0], E_0, data_confirm[0], data_fatality[0]]
 
     params_all, loss_all = rolling_train(model, init, train_data, new_sus, pop_in=pop_in)
     loss_true = [NE0_region[region][-2], NE0_region[region][-1]]
-    
+
     pred_true = rolling_prediction(model, init, params_all, full_data, new_sus, pred_range=prediction_range, pop_in=pop_in, daily_smooth=True)
 
     confirm = full_data[0][0][0:-1].tolist() + full_data[1][0][0:-1].tolist() + pred_true[0].tolist()
 
     print ("region: ", region, " training loss: ",  \
-        loss_all, loss_true," maximum death cases: ", int(pred_true[1][-1]), " maximum confirmed cases: ", int(pred_true[0][-1])) 
+        loss_all, loss_true," maximum death cases: ", int(pred_true[1][-1]), " maximum confirmed cases: ", int(pred_true[0][-1]))
 
     _, loss_true = rolling_likelihood(model, init, params_all, train_data, new_sus, pop_in=pop_in)
     data_length = [len(data[0]) for data in train_data]
@@ -256,7 +290,7 @@ for region in region_list:
     I_inv=np.asarray(I_inv)
     R_inv=np.asarray(R_inv)
     A_inv=np.asarray(A_inv)
-    
+
     #set the percentiles of upper and lower bounds
     maxI=np.percentile(I_inv,100,axis=0)
     minI=np.percentile(I_inv,0,axis=0)
@@ -264,7 +298,7 @@ for region in region_list:
     minR=np.percentile(R_inv,0,axis=0)
     maxA=np.percentile(A_inv,100,axis=0)
     minA=np.percentile(A_inv,0,axis=0)
-    
+
     # get the median of the curves
     # meanI=I_inv[-1,:]
     # meanR=R_inv[-1,:]
@@ -272,10 +306,10 @@ for region in region_list:
     meanI=np.percentile(I_inv,50,axis=0)
     meanR=np.percentile(R_inv,50,axis=0)
     meanA=np.percentile(A_inv,50,axis=0)
-    
+
     diffR, diffI = np.zeros(R_inv.shape), np.zeros(I_inv.shape)
     diffR[:,1:], diffI[:,1:] = np.diff(R_inv), np.diff(I_inv)
-    
+
 
     diffmR, diffmI = np.zeros(meanR.shape), np.zeros(meanI.shape)
 
@@ -294,15 +328,15 @@ for region in region_list:
 
     dates = [pd.to_datetime(PRED_START_DATE)+ timedelta(days=i) \
              for i in range(prediction_range)]
-    
+
     # print(len(dates), len(meanI))
     results0 = np.asarray([minI, maxI, minR, maxR, meanI, meanR, diffmR, difflR, diffuR, minA, maxA, meanA, diffmI, difflI, diffuI])
     results0 = np.asarray(results0.T)
-    
+
     pred_data=pd.DataFrame(data=results0, index = dates, columns=["lower_pre_confirm", "upper_pre_confirm", "lower_pre_fata", "upper_pre_fata",'pre_confirm', \
         'pre_fata','pre_fata_daily','lower_pre_fata_daily','upper_pre_fata_daily','lower_pre_act','upper_pre_act', 'pre_act', \
         'pre_confirm_daily','lower_pre_confirm_daily','upper_pre_confirm_daily'])
-    
+
     if args.level == "state" or args.level == "nation":
         pred_data['Region'] = region
     elif args.level == "county":

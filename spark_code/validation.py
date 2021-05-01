@@ -26,6 +26,15 @@ parser.add_argument('--popin', type=float, default = 0,
 args = parser.parse_args()
 
 print(args)
+
+
+#team adding vaccination data, will need to update for output of predictions
+vaccines = pd.read_csv("california_vaccinations.csv")
+first_vaccine_date = list(vaccines.date)[0]
+vaccines = list(vaccines.daily_vaccinations)
+
+
+
 START_nation = {"US": "2020-03-22"}
 
 
@@ -87,9 +96,9 @@ def get_county_list(cc_limit=200, pop_limit=50000, data=None, County_Pop=None):
 
 
 if __name__ == '__main__':
-    
-    
-    # initial the dataloader, get region list 
+
+
+    # initial the dataloader, get region list
     # get the directory of output validation files
     if args.level == "state":
         data = NYTimes(level='states')
@@ -97,11 +106,11 @@ if __name__ == '__main__':
         region_list = [state for state in data.state_list if not state in nonstate_list]
 
         mid_dates = mid_dates_state
-        write_dir = "val_results_state/" + args.dataset + "_" 
+        write_dir = "val_results_state/" + args.dataset + "_"
         if not args.state == "default":
-            region_list = [args.state]  
+            region_list = [args.state]
             write_dir = "val_results_state/test" + args.dataset + "_"
-        
+
     elif args.level == "county":
         state = args.state
         data = NYTimes(level='counties')
@@ -118,7 +127,7 @@ if __name__ == '__main__':
             write_dir = "val_results_county/" + args.dataset + "_"
 
     params_allregion = {}
-   
+
 
     for region in region_list:
 
@@ -126,7 +135,7 @@ if __name__ == '__main__':
         # get the population
         # get the start date, and second start date
         # get the parameters a and decay
-        
+
         if args.level == "state":
             state = str(region)
             #read population from csv file.
@@ -155,11 +164,36 @@ if __name__ == '__main__':
                  data.get(resurge_start_date, args.VAL_END_DATE, state)]
 
 
+
+            #team added finding time between last section of dates starting and vaccines starting
+            try:
+                print("start date",start_date)
+                last_start_day =start_date
+            except:
+                print("no start date")
+            try:
+                print("second_start_date",second_start_date)
+                last_start_day = second_start_date
+            except:
+                print(" no second start date")
+            try:
+                print("resurge_start_date",resurge_start_date)
+                last_start_day = resurge_start_date
+            except:
+                print("no resurge date")
+            from datetime import datetime
+
+            date_difference = (datetime.strptime(first_vaccine_date,"%Y-%m-%d")- datetime.strptime(last_start_day,"%Y-%m-%d")).days
+            print(date_difference)
+
+
+
+
             val_data = data.get(args.END_DATE, args.VAL_END_DATE, state)
             if state in decay_state.keys():
                 a, decay = decay_state[state][0], decay_state[state][1]
             else:
-                a, decay = 0.7, 0.3          
+                a, decay = 0.7, 0.3
             # will rewrite it using json
             pop_in = 1/400
             if state == "California":
@@ -226,7 +260,7 @@ if __name__ == '__main__':
                 pop_in = args.popin
 
         print("region: ", region, " start date: ", start_date, " mid date: ", second_start_date,
-            " end date: ", args.END_DATE, " Validation end date: ", args.VAL_END_DATE, "mean increase: ", mean_increase, pop_in )    
+            " end date: ", args.END_DATE, " Validation end date: ", args.VAL_END_DATE, "mean increase: ", mean_increase, pop_in )
 
         # print(train_data)
         # candidate choices of N and E_0, here r = N/E_0
@@ -238,7 +272,7 @@ if __name__ == '__main__':
             rs = np.asarray([30,  40, 50, 60, 70, 80,  90, 100, 120, 150, 200, 400])
 
         A_inv, I_inv, R_inv, loss_list0, loss_list1, params_list, learner_list, I_list = [],[],[],[],[],[],[],[]
-            
+
         val_log = []
         min_val_loss = 10 #used for finding the minimum validation loss
         # this will be 1 iteration
@@ -261,8 +295,9 @@ if __name__ == '__main__':
                 data_confirm, data_fatality = train_data[0][0], train_data[0][1]
                 # print (bias)
                 #initializing model
-                model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, bias=bias)
-
+                #model = Learner_SuEIR(N=N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, bias=bias)
+                #team changed call to Sueir model to reflect new inputs
+                model = Learner_SuEIR(N, E_0=E_0, I_0=data_confirm[0], R_0=data_fatality[0], a=a, decay=decay, vac_data =vaccines,vac_date_diff =date_difference , bias=bias)
                 # At the initialization we assume that there is not recovered cases.
                 init = [N-E_0-data_confirm[0]-data_fatality[0], E_0, data_confirm[0], data_fatality[0]]
                 # train the model using the candidate N and E_0, then compute the validation loss
@@ -277,7 +312,7 @@ if __name__ == '__main__':
                         val_loss = 1e6
 
 
-                # using the model to forecast the fatality and confirmed cases in the next 100 days, 
+                # using the model to forecast the fatality and confirmed cases in the next 100 days,
                 # output max_daily, last confirm and last fatality for validation
                 pred_confirm, pred_fatality, _ = rolling_prediction(model, init, params_all, train_data, new_sus, pop_in=pop_in, pred_range=100, daily_smooth=True)
                 max_daily_confirm = np.max(np.diff(pred_confirm))
