@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pandas.plotting import autocorrelation_plot
 from pyspark.ml.regression import LinearRegression
+from datetime import timedelta, datetime
+import time
 
 spark = SparkSession.builder \
     .master("local[1]") \
@@ -75,10 +77,21 @@ for state in states: #["United States"]:
   pred_y = [it[1] for it in preds]
 
   # ALL OUTPUTS FROM 1ST VACCINATION - 30 DAYS FROM NOW, PLOTTED
+  dates = []
+  epochidx = []
+  for temp in all_X:
+    date = time.strftime('%Y-%m-%d', time.localtime(temp))
+    if (date[-2:]=='01'):
+      dates.append(date)
+      epochidx.append(temp)
+
   all_Y = np.concatenate([y, pred_y])
   numRows = all_Y.shape[0]
   plt.plot(all_X, all_Y) #THIS WILL BE SAVED IN THE CSV
+  plt.xticks(epochidx,dates)
   plt.plot(x,y) #HISTORICAL DATA
+  title = state + " Vaccinations - Historical (Orange) & Predictions (Blue)"
+  plt.title(title)
   plt.savefig("plots/"+state+"_vaccination_rate_over_time.png")
   plt.clf()
 
